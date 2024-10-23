@@ -203,6 +203,7 @@ public class Escoba {
         }
         System.out.println("HA GANADO EL JUGADOR: " + (ganador+1) + " CON " + masPuntos + " PUNTOS");
     }
+<<<<<<< Updated upstream
 
     //muestra la mesa solo como imagenes
     private void mostrarCartasMesa() {
@@ -248,5 +249,66 @@ public class Escoba {
         }
 
         return botones;
+=======
+}
+//suma todas las cartas elegidas
+private void comprobarSeleccion() {
+    // if para los distintos casos
+    if (!cartasSeleccionadas.isEmpty()) {
+
+        //variable carta para revisar si la carta jugada es seleccionada si no se agrega
+        boolean carta;
+        // si la carta no esta la agrega
+        if (!cartasSeleccionadas.contains(cartaActual)) {
+            System.out.println("SIEMPRE debes de tomar tu carta");
+            cartasSeleccionadas.add(cartaActual);
+        }
+
+        // inicia la suma de las cartas
+        int suma = 0;
+        for (Carta c : cartasSeleccionadas) {
+            suma += c.getValor();
+            System.out.println(c.toString());
+        }
+
+        if (suma == 15) { //resultado de la suma de cartas correcto
+            System.out.println("Suma correcta Total: " + suma);
+            //añade las cartas a la pila del jugador y comprueba si se hizo escoba
+            boolean escobas;
+            if(cartasMesa.size() == 0){
+                escobas = true;
+            } else {
+                escobas = false;
+            }
+            jugadores.get(turnoJugador).recogerCartasMesa(cartasMesa, escobas);
+
+            // quita las cartas de la mesa
+            for(Carta c: cartasSeleccionadas) {
+                cartasMesa.remove(c);
+            }
+        } else {
+            System.out.println("Suma incorrecta. Total: " + suma);
+        }
+    } else {
+        System.out.println("No tomaste ninguna carta.");
+    }
+    cambiarTurno();
+}
+//cambia datos para el turno del siguiente jugador
+private void cambiarTurno() {
+    // Cambia el turno al siguiente jugador
+    turnoJugador = (turnoJugador + 1) % numJugadores;
+
+    // Actualiza las manos y la mesa para el nuevo jugador
+    cartasSeleccionadas.removeAll(cartasSeleccionadas);
+
+    mostrarCartasMesa();
+    int cartaManos = 0;
+    for(Jugador j: jugadores) {
+        cartaManos += j.getManoJugador().size();
+    }
+    if(cartaManos == 1){
+        obtenerGanador();
+>>>>>>> Stashed changes
     }
 }
