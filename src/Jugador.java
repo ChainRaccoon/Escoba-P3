@@ -21,19 +21,20 @@ public class Jugador {
 
     public void jalarCarta(Carta carta) {
         mano.add(carta);
-        System.out.println("Carta añadida");
+    }
+
+    public void escobaRecogida(){
+        System.out.println("ESCOBA!!");
+        escobas++;
     }
 
     public void recogerCartasMesa(ArrayList<Carta> mesa, boolean escoba) {
         for (int i = 0; i < mesa.size(); i++) {
             cartasRecogidas.add(mesa.get(i));
         }
-        if (escoba) {
-            System.out.println("Recogida escoba");
-            escobas++;
-        } else {
-            System.out.println("Cartas recogidas " + mesa.size());
-        }
+
+            System.out.println("Cartas recogidas ");
+
     }
 
     public ArrayList<Carta> getManoJugador() {

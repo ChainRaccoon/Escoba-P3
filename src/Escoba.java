@@ -3,6 +3,7 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Escoba {
     private int numJugadores;
@@ -21,7 +22,17 @@ public class Escoba {
     private ArrayList<Carta> cartasMesa;
 
     public Escoba() {
-        numJugadores = 2;
+        int jugadores;
+        Scanner sc = new Scanner(System.in);
+        do {
+            System.out.println("Cuantas personas jugaran? ");
+            jugadores = sc.nextInt();
+
+            if (jugadores < 2 || jugadores > 4) {
+                System.out.println("Número inválido. Intenta de nuevo.");
+            }
+        } while (jugadores < 2 || jugadores > 4);
+        this.numJugadores = jugadores;
         turnoJugador = 0;
         cartaColocada = false;
         cartasSeleccionadas = new ArrayList<>(); // Inicializar el ArrayList de cartas seleccionadas
@@ -48,6 +59,40 @@ public class Escoba {
                 j.jalarCarta(baraja.getCarta());
             }
         }
+    }
+
+    //inicia la mesa con 4 cartas
+    public void iniciarMesa() {
+        //tamaño inicial de la mesa
+        int tamañoMesa = 4;
+        cartasMesa = new ArrayList<>();
+
+        //llena la mesa
+        for (int i = 0; i < tamañoMesa; i++) {
+            cartasMesa.add(baraja.getCarta());
+        }
+        System.out.println("mesa iniciada");
+    }
+
+    //tomar carta de la mano y colocarla en la mesa
+    public void jugarCarta(int numCarta) {
+        // Toma la carta jugada
+        Carta cartaJugando = jugadores.get(turnoJugador).jugarCarta(numCarta);
+        cartaActual = cartaJugando;
+        cartasMesa.add(cartaJugando);
+
+        // Actualiza la mesa para mostrar las cartas
+        actualizarMesa();
+
+        // El jugador toma cartas para tener 3 cartas de nuevo
+        if (baraja.getSize() > 0) {
+            jugadores.get(turnoJugador).jalarCarta(baraja.getCarta());
+        } else {
+            System.out.println("No quedan más cartas");
+        }
+
+        // Habilitar selección de cartas en la mesa
+        habilitarSeleccionMesa();
     }
 
     //inicia la pantalla
@@ -85,64 +130,19 @@ public class Escoba {
         pantalla.setVisible(true);
     }
 
-    //convierte un arreglo de cartas en botones
-    public ArrayList<JButton> crearBotonesMano(ArrayList<Carta> Cartas) {
-        //recibe un arreglo de cartas y crea un arreglo de botones
-        ArrayList<JButton> botones = new ArrayList<JButton>(Cartas.size());
+    //muestra la mesa solo como imagenes
+    private void mostrarCartasMesa() {
+        //elimina la mesa anterior
+        panelCartasMesa.removeAll();
 
-        //pasa por cada carta y toma su imagen para el boton
-        for (int i = 0; i < Cartas.size(); i++) {
-            Carta cartaActual = Cartas.get(i);
-            JButton boton = new JButton(cartaActual.getImagenIcon());
-
-            int numCarta = i;
-
-            // Asignar un ActionListener para capturar el clic en el botón
-            boton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    System.out.println("Carta seleccionada: " + cartaActual.toString());
-                    cartaColocada = true;
-                    jugarCarta(numCarta);
-                }
-            });
-            botones.add(boton);
-        }
-        return botones;
-    }
-
-    //tomar carta de la mano y colocarla en la mesa
-    public void jugarCarta(int numCarta) {
-        // Toma la carta jugada
-        Carta cartaJugando = jugadores.get(turnoJugador).jugarCarta(numCarta);
-        cartaActual = cartaJugando;
-        cartasMesa.add(cartaJugando);
-
-        // Actualiza la mesa para mostrar las cartas
-        actualizarMesa();
-
-        // El jugador toma cartas para tener 3 cartas de nuevo
-        if (baraja.getSize() > 0) {
-            jugadores.get(turnoJugador).jalarCarta(baraja.getCarta());
-        } else {
-            System.out.println("No quedan más cartas");
+        //muestra solo las imagenes de las cartas
+        for (Carta carta : cartasMesa) {
+            JLabel etiquetaCarta = new JLabel(carta.getImagenIcon());
+            panelCartasMesa.add(etiquetaCarta); // Añadir imagen al panel de la mesa
         }
 
-        // Habilitar selección de cartas en la mesa
-        habilitarSeleccionMesa();
-    }
-
-    //inicia la mesa con 4 cartas
-    public void iniciarMesa() {
-        //tamaño inicial de la mesa
-        int tamañoMesa = 4;
-        cartasMesa = new ArrayList<>();
-
-        //llena la mesa
-        for (int i = 0; i < tamañoMesa; i++) {
-            cartasMesa.add(baraja.getCarta());
-        }
-        System.out.println("mesa iniciada");
+        panelCartasMesa.revalidate();
+        panelCartasMesa.repaint();
     }
 
     //actualizar mesa
@@ -159,6 +159,25 @@ public class Escoba {
 
         panelCartasMesa.revalidate();
         panelCartasMesa.repaint();
+    }
+
+    //**actualizar manos
+    public void actualizarManos() {
+        //elimina la mano anterior
+        panelCartasJugador.removeAll();
+
+        //actualiza la etiqueta del turno del jugador
+        JLabel etiquetaJugador = new JLabel("Turno del jugador: " + (turnoJugador + 1));
+        panelCartasJugador.add(etiquetaJugador);
+
+        //crea los botones para elegir su carta
+        ArrayList<JButton> botones = crearBotonesMano(jugadores.get(turnoJugador).getManoJugador());
+        for (JButton boton : botones) {
+            panelCartasJugador.add(boton);
+        }
+
+        panelCartasJugador.revalidate();
+        panelCartasJugador.repaint();
     }
 
     //seleccion de cartas en la mesa
@@ -189,35 +208,97 @@ public class Escoba {
         panelCartasMesa.repaint();
     }
 
-    //metodo para obtener al ganador
-    public void obtenerGanador() {
-        int masPuntos = 0;
-        int ganador = 0;
-        for(int i = 0; i < numJugadores; i++) {
-            int puntos = jugadores.get(i).sumarPuntos();
-            System.out.println("Jugador "+ i+1 + ": " + puntos+ " puntos");
-            if(puntos > masPuntos) {
-                masPuntos = puntos;
-                ganador = i;
+    //suma todas las cartas elegidas
+    private void comprobarSeleccion() {
+        // if para los distintos casos
+        if (!cartasSeleccionadas.isEmpty()) {
+
+            //variable carta para revisar si la carta jugada es seleccionada si no se agrega
+            boolean carta;
+            // si la carta no esta la agrega
+            if (!cartasSeleccionadas.contains(cartaActual)) {
+                System.out.println("SIEMPRE debes de tomar tu carta");
+                cartasSeleccionadas.add(cartaActual);
             }
+
+            // inicia la suma de las cartas
+            int suma = 0;
+            for (Carta c : cartasSeleccionadas) {
+                suma += c.getValor();
+                System.out.println(c.toString());
+            }
+
+            if (suma == 15) { //resultado de la suma de cartas correcto
+                System.out.println("Suma correcta Total: " + suma);
+                //añade las cartas a la pila del jugador y comprueba si se hizo escoba
+                boolean escobas;
+                if(cartasMesa.size() == 0){
+                    escobas = true;
+                    System.out.println("ESCOBA!!");
+                } else {
+                    escobas = false;
+                }
+                jugadores.get(turnoJugador).recogerCartasMesa(cartasMesa, escobas);
+
+                // quita las cartas de la mesa
+                for(Carta c: cartasSeleccionadas) {
+                    cartasMesa.remove(c);
+                }
+                if(cartasMesa.size() == 0){
+                    jugadores.get(turnoJugador).escobaRecogida();
+                }
+            } else {
+                System.out.println("Suma incorrecta. Total: " + suma);
+            }
+        } else {
+            System.out.println("No tomaste ninguna carta.");
         }
-        System.out.println("HA GANADO EL JUGADOR: " + (ganador+1) + " CON " + masPuntos + " PUNTOS");
+        System.out.println();
+        cambiarTurno();
     }
-<<<<<<< Updated upstream
 
-    //muestra la mesa solo como imagenes
-    private void mostrarCartasMesa() {
-        //elimina la mesa anterior
-        panelCartasMesa.removeAll();
+    //cambia datos para el turno del siguiente jugador
+    private void cambiarTurno() {
+        // Cambia el turno al siguiente jugador
+        turnoJugador = (turnoJugador + 1) % numJugadores;
 
-        //muestra solo las imagenes de las cartas
-        for (Carta carta : cartasMesa) {
-            JLabel etiquetaCarta = new JLabel(carta.getImagenIcon());
-            panelCartasMesa.add(etiquetaCarta); // Añadir imagen al panel de la mesa
+        // Actualiza las manos y la mesa para el nuevo jugador
+        cartasSeleccionadas.removeAll(cartasSeleccionadas);
+        actualizarManos();
+        mostrarCartasMesa();
+        int cartaManos = 0;
+        for(Jugador j: jugadores) {
+            cartaManos += j.getManoJugador().size();
         }
+        if(cartaManos == 0){
+            obtenerGanador();
+        }
+    }
 
-        panelCartasMesa.revalidate();
-        panelCartasMesa.repaint();
+    //convierte un arreglo de cartas en botones
+    public ArrayList<JButton> crearBotonesMano(ArrayList<Carta> Cartas) {
+        //recibe un arreglo de cartas y crea un arreglo de botones
+        ArrayList<JButton> botones = new ArrayList<JButton>(Cartas.size());
+
+        //pasa por cada carta y toma su imagen para el boton
+        for (int i = 0; i < Cartas.size(); i++) {
+            Carta cartaActual = Cartas.get(i);
+            JButton boton = new JButton(cartaActual.getImagenIcon());
+
+            int numCarta = i;
+
+            // Asignar un ActionListener para capturar el clic en el botón
+            boton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Carta seleccionada: " + cartaActual.toString());
+                    cartaColocada = true;
+                    jugarCarta(numCarta);
+                }
+            });
+            botones.add(boton);
+        }
+        return botones;
     }
 
     //convierte el arreglo de la mesa en botones
@@ -249,66 +330,20 @@ public class Escoba {
         }
 
         return botones;
-=======
-}
-//suma todas las cartas elegidas
-private void comprobarSeleccion() {
-    // if para los distintos casos
-    if (!cartasSeleccionadas.isEmpty()) {
-
-        //variable carta para revisar si la carta jugada es seleccionada si no se agrega
-        boolean carta;
-        // si la carta no esta la agrega
-        if (!cartasSeleccionadas.contains(cartaActual)) {
-            System.out.println("SIEMPRE debes de tomar tu carta");
-            cartasSeleccionadas.add(cartaActual);
-        }
-
-        // inicia la suma de las cartas
-        int suma = 0;
-        for (Carta c : cartasSeleccionadas) {
-            suma += c.getValor();
-            System.out.println(c.toString());
-        }
-
-        if (suma == 15) { //resultado de la suma de cartas correcto
-            System.out.println("Suma correcta Total: " + suma);
-            //añade las cartas a la pila del jugador y comprueba si se hizo escoba
-            boolean escobas;
-            if(cartasMesa.size() == 0){
-                escobas = true;
-            } else {
-                escobas = false;
-            }
-            jugadores.get(turnoJugador).recogerCartasMesa(cartasMesa, escobas);
-
-            // quita las cartas de la mesa
-            for(Carta c: cartasSeleccionadas) {
-                cartasMesa.remove(c);
-            }
-        } else {
-            System.out.println("Suma incorrecta. Total: " + suma);
-        }
-    } else {
-        System.out.println("No tomaste ninguna carta.");
     }
-    cambiarTurno();
-}
-//cambia datos para el turno del siguiente jugador
-private void cambiarTurno() {
-    // Cambia el turno al siguiente jugador
-    turnoJugador = (turnoJugador + 1) % numJugadores;
 
-    // Actualiza las manos y la mesa para el nuevo jugador
-    cartasSeleccionadas.removeAll(cartasSeleccionadas);
-
-    mostrarCartasMesa();
-    int cartaManos = 0;
-    for(Jugador j: jugadores) {
-        cartaManos += j.getManoJugador().size();
-    }
-    if(cartaManos == 1){
-        obtenerGanador();
->>>>>>> Stashed changes
+    //metodo para obtener al ganador
+    public void obtenerGanador() {
+        int masPuntos = 0;
+        int ganador = 0;
+        for(int i = 0; i < numJugadores; i++) {
+            int puntos = jugadores.get(i).sumarPuntos();
+            System.out.println("Jugador "+ i+1 + ": " + puntos+ " puntos");
+            if(puntos > masPuntos) {
+                masPuntos = puntos;
+                ganador = i;
+            }
+        }
+        System.out.println("HA GANADO EL JUGADOR: " + (ganador+1) + " CON " + masPuntos + " PUNTOS");
     }
 }
